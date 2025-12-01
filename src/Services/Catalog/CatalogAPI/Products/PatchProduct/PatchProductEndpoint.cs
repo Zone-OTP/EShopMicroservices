@@ -3,23 +3,23 @@ using CatalogAPI.Products.CreateProduct;
 
 namespace CatalogAPI.Products.PatchProduct
 {
-    public record PatchProductResponse(Guid Id, string Name);
-    public record PatchProductRequest(string id);
+    public record PatchProductRequest(Guid Id, string Name, List<string> Categiry, string Description, string ImageFile, decimal Price);
+    public record PatchProductResponse(bool IsSuccess);
 
     public class PatchProductEndpoint : ICarterModule
     {
         public void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPatch("/products/{Id}", async (Guid Id,ISender sender) =>
+            app.MapPatch("/products/{Id}", async (PatchProductRequest request,ISender sender) =>
             {
-                
-                var command = new PatchProductCommand(Id);
+
+                var command = request.Adapt<PatchProductResponse>();
 
                 var result = await sender.Send(command);
 
                 var response = result.Adapt<PatchProductResponse>();
 
-                return Results.Ok($"Patched {response.Id} Name is now {response.Name}");
+                return Results.Ok($"Patched {response.IsSuccess} ");
             })
             .WithName("PatchProduct")
             .Produces<PatchProductResult>(StatusCodes.Status201Created)
