@@ -1,28 +1,36 @@
 ﻿
-
-
 namespace CatalogAPI.Products.PatchProduct
 {
-    public record PatchProductCommand(Guid Id, string Name, List<string> Categiry, string Description, string ImageFile, decimal Price) 
+    public record PatchProductCommand(Guid Id, string Name, List<string> Category, string Description, string ImageFile, decimal Price) 
         : ICommand<PatchProductResult>;
     public record PatchProductResult(bool IsSuccsess);
-    internal class PatchProductCommandHandler(IDocumentSession session, ILogger logger) : ICommandHandler<PatchProductCommand, PatchProductResult>
+    public class PatchProductCommandValidator : AbstractValidator<PatchProductCommand> 
     {
-        public async Task<PatchProductResult> Handle(PatchProductCommand Command, CancellationToken cancellationToken)
+        public PatchProductCommandValidator()
         {
-            logger.LogInformation("We Have Started Patching a Product {@Command}", Command);
-            var product = await session.LoadAsync<Product>(Command.Id, cancellationToken);
+            RuleFor(command => command.Id).NotEmpty().WithMessage("Id Can't Be Empty");
+         
+            RuleFor(command => command.Name).NotEmpty().WithMessage("Name Can't be empty").Length(2, 150).WithMessage("Name Has to be between 2 and 150 charecters");
+
+            RuleFor(command => command.Price).GreaterThan(0).WithMessage("Price has to be greater than 0");
+        }
+    }
+    internal class PatchProductCommandHandler(IDocumentSession session) : ICommandHandler<PatchProductCommand, PatchProductResult>
+    {
+        public async Task<PatchProductResult> Handle(PatchProductCommand command, CancellationToken cancellationToken)
+        {
+            var product = await session.LoadAsync<Product>(command.Id, cancellationToken);
 
             if (product is null)
             {
-                throw new ProductNotFoundException();
+                throw new ProductNotFoundException(command.Id);
             }
 
-            product.Name = Command.Name;
-            product.Category = Command.Categiry;
-            product.Description = Command.Description;
-            product.ImageFile = Command.ImageFile;
-            product.Price = Command.Price;
+            product.Name = command.Name;
+            product.Category = command.Category;
+            product.Description = command.Description;
+            product.ImageFile = command.ImageFile;
+            product.Price = command.Price;
 
             session.Update(product);
             await session.SaveChangesAsync();
