@@ -1,5 +1,4 @@
-﻿using BasketAPI.Models;
-
+﻿
 namespace BasketAPI.Basket.StoreBasket
 {
     public record StoreBasketCommand(ShoppingCart Cart):ICommand<StoreBasketResult>;
@@ -14,13 +13,14 @@ namespace BasketAPI.Basket.StoreBasket
 
     }
 
-    internal class StoreBasketCommandHandler : ICommandHandler<StoreBasketCommand, StoreBasketResult>
+    internal class StoreBasketCommandHandler(IBasketRepositroy repositroy) : ICommandHandler<StoreBasketCommand, StoreBasketResult>
     {
         public async Task<StoreBasketResult> Handle(StoreBasketCommand command, CancellationToken cancellationToken)
         {
-            ShoppingCart cart = command.Cart;
 
-            return new StoreBasketResult("true");
+            await repositroy.StoreBasket(command.Cart, cancellationToken);
+
+            return new StoreBasketResult(command.Cart.UserName);
         }
     }
 }

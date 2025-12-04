@@ -1,15 +1,16 @@
-﻿using BasketAPI.Models;
+﻿using BasketAPI.Data;
+using BasketAPI.Models;
 
 namespace BasketAPI.Basket.GetBasket
 {
     public record GetBasketQuery(string UserName):IQuery<GetBasketResult>;
     public record GetBasketResult(ShoppingCart Cart);
-    internal class GetBasketQueryHandler(IDocumentSession session) : IQueryHandler<GetBasketQuery, GetBasketResult>
+    internal class GetBasketQueryHandler(IBasketRepositroy repository) : IQueryHandler<GetBasketQuery, GetBasketResult>
     {
-        public Task<GetBasketResult> Handle(GetBasketQuery query, CancellationToken cancellationToken)
+        public async  Task<GetBasketResult> Handle(GetBasketQuery query, CancellationToken cancellationToken)
         {
-            
-            throw new NotImplementedException();
+            var basket = await repository.GetBasket(query.UserName);
+            return new GetBasketResult(basket);
         }
     }
 }
